@@ -95,7 +95,42 @@ stag_posizeWin(){
       /usr/bin/xdotool windowsize `/usr/bin/xdotool getwindowfocus` $dimHalfWidth $dimHeight && /usr/bin/xdotool windowmove `/usr/bin/xdotool getwindowfocus` 0 0
       ;;
     center|c)
-      echo "nothing for center yet ;p"
+      # R: to make a negative value positive, the following quickie is helpful: "${maybeNegative#*-}"
+      winDims=$(xdotool getwindowgeometry --shell $(xdotool getactivewindow) | tr "\n" " ")
+      winDims="${winDims% SCREEN*}"
+      winDims1="${winDims% WIDTH*}"
+      winDims1="${winDims1#* X=}"
+      winX="${winDims1% Y*}"
+      winY="${winDims1#* Y=}"
+      winDims2="${winDims#*WIDTH=}"
+      winWidth="${winDims2% *}"
+      winHeight="${winDims2#* HEIGHT=}"
+      winDimHalfWidth=$(( $winWidth / 2 ))
+      winDimHalfHeight=$(( $winHeight / 2 ))
+      winCenterX=$(( $winX + $winDimHalfWidth ))
+      winCenterY=$(( $winY + $winDimHalfHeight ))
+      # WIP START
+      # idea
+      #(( $winCenterX > $dimHalfWidth )) && winNewX=$(( $winX - ( $winCenterX - $dimHalfWidth ) )) || winNewX=$(( $winX + ( $winCenterX - $dimHalfWidth ) ))
+      #(( $winCenterY > $dimHalfHeight )) && winNewY=$(( $winY - ( $winCenterY - $dimHalfHeight ) )) || winNewY=$(( $winY + ( $winCenterY - $dimHalfHeight ) ))
+      # debug
+      # (( $winCenterX > $dimHalfWidth ))
+        # distanceDiffX=$(( $winCenterX - $dimHalfWidth ))
+          # newX=$(( $winX - $distanceDiffX ))
+      # (( $winCenterY > $dimHalfHeight ))
+        # distanceDiffY=$(( $winCenterY - $dimHalfHeight ))
+      # WIP END
+      # "hackety trick simplifier"
+     
+      distDiffX=$(( $winCenterX - $dimHalfWidth ))
+      distDiffX="${distDiffX#*-}"
+      distDiffY=$(( $winCenterY - $dimHalfHeight ))
+      distDiffY="${distDiffY#*-}"
+
+      (( $winCenterX > $dimHalfWidth )) && winNewX=$(( $winX - $distDiffX )) || winNewX=$(( $winX + $distDiffX ))
+      (( $winCenterY > $dimHalfHeight )) && winNewY=$(( $winY - $distDiffY )) || winNewY=$(( $winY + $distDiffY ))
+      
+      xdotool windowmove $(xdotool getactivewindow) $winNewX $winNewY
       ;;
     right|r)
       /usr/bin/xdotool windowsize `/usr/bin/xdotool getwindowfocus` $dimHalfWidth $dimHeight && /usr/bin/xdotool windowmove `/usr/bin/xdotool getwindowfocus` $dimHalfWidth 0
@@ -110,13 +145,14 @@ stag_posizeWin(){
       /usr/bin/xdotool windowsize `/usr/bin/xdotool getwindowfocus` $dimHalfWidth $dimHalfHeight && /usr/bin/xdotool windowmove `/usr/bin/xdotool getwindowfocus` $dimHalfWidth $dimHalfHeight
       ;;
     fullscreen|f)
-      echo "nothing for fullscreen yet ;p"
+      echo "use F11 like everyone !"
       ;;
     maximize|ma)
-      echo "nothing for maximize yet ;p"
+      xdotool windowsize $(xdotool getactivewindow) $dimWidth $dimHeight && xdotool windowmove $(xdotool getactivewindow) 0 0
+      #xdotool windowsize $(xdotool getactivewindow) 100% 100% && xdotool windowmove $(xdotool getactivewindow) 0 0
       ;;
     minimize|mi)
-      echo "nothing for minimize yet ;p"
+      xdotool windowminimize $(xdotool getactivewindow)
       ;;
     help|h)
       echo " -- The script arguments available are the following -- "
@@ -182,3 +218,9 @@ stag_posizeWin(){
 
 # call our 'main' function & pass it all the arguments passed to the script
 stag_posizeWin $@
+
+
+
+# R: may be useful for next versions of the script
+# print the cursor location whenever the mouse enters a currently-visible window
+#xdotool search --onlyvisible . behave %@ mouse-enter getmouselocation
